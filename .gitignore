@@ -1,0 +1,15 @@
+# build output
+[Bb]in/
+[Oo]bj/
+*.pdb
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# test results
+[Tt]est[Rr]esult*/
+*.trx

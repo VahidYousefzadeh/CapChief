@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\CapChief.Platform\CapChief.Platform.csproj" />
+    <Compile Include="..\CapChief\**\*.cs" Exclude="..\CapChief\Program.cs;..\CapChief\obj\**;..\CapChief\bin\**" LinkBase="App" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <OptimizationPreference>Speed</OptimizationPreference>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <ApplicationIcon>..\..\icon.ico</ApplicationIcon>
+    <AssemblyName>CapChief.Lab</AssemblyName>
+    <RootNamespace>CapChief.Lab</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+</Project>

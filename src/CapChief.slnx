@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="CapChief.Platform/CapChief.Platform.csproj" />
+  <Project Path="CapChief/CapChief.csproj" />
+  <Project Path="CapChief.Lab/CapChief.Lab.csproj" />
+  <Project Path="CapChief.Tests/CapChief.Tests.csproj" />
+</Solution>

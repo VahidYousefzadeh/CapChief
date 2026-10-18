@@ -171,7 +171,17 @@ public abstract class Control
             h = LaidOutSize.Height;
         }
 
-        Bounds = Rect.At(slot.Left, slot.Top, w, h);
+        int left;
+        if (HorizontalAlignment == HorizontalAlignment.Right)
+        {
+            left = slot.Right - w;
+        }
+        else
+        {
+            left = slot.Left;
+        }
+
+        Bounds = Rect.At(left, slot.Top, w, h);
         ArrangeOverride(Padding.Shrink(Bounds, Scale));
     }
 
@@ -261,6 +271,7 @@ public enum HorizontalAlignment
 {
     Left,
     Stretch,
+    Right,
 }
 
 /// <summary>

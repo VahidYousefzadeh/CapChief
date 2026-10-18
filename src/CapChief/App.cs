@@ -23,7 +23,7 @@ public sealed class App
         Recording = new Recording(screen);
         _selecting = new Selecting(new WindowFinder(desk, _scan, Crop.MinSize), desk, _metrics);
         Overlay = new Overlay(desk, _metrics, icon, excludedFromCapture, _selecting, Document, Review, MarkPainter, Tools);
-        Shell = new AppShell(icon, Overlay, new ToolbarForm(icon, new ToolbarPlacement(desk), desk), new HistoryForm(icon, desk, MarkPainter), new ToolPickerForm(icon, desk, Tools, Document), Tools, Document, Review, History);
+        Shell = new AppShell(icon, Overlay, new ToolbarForm(icon, new ToolbarPlacement(desk), desk), new HistoryForm(icon, desk, MarkPainter), new ToolPickerForm(icon, desk, Tools, Document), new AboutForm(icon, desk), Tools, Document, Review, History);
         Workflow = new CaptureWorkflow(Document, desk, screen, _metrics, Overlay, _selecting, Drawing, CountingDown, Recording, Review, Shell);
         Workspace = new WorkspaceService(Document, Tools, History, Workflow, Shell);
         CaptureService = new CaptureService(Document, Workflow, Workspace, Review, MarkPainter, Shell);

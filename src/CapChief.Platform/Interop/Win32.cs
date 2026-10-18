@@ -109,6 +109,7 @@ public static class Win32
     public const int HTCLIENT = 1;
     public const int HTTRANSPARENT = -1;
     public const int RGN_OR = 2;
+    public const int SW_SHOWNORMAL = 1;
     public const int SW_SHOWNOACTIVATE = 4;
     public const int COLORONCOLOR = 3;
     public const int HALFTONE = 4;
@@ -539,6 +540,7 @@ public static class Win32
     public const uint DI_NORMAL = 0x0003;
 
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern bool Shell_NotifyIconW(uint msg, ref NOTIFYICONDATAW data);
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr ShellExecuteW(IntPtr h, string? verb, string file, string? parameters, string? directory, int show);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern uint RegisterWindowMessageW(string name);
     [DllImport("user32.dll")] public static extern bool PostMessageW(IntPtr h, uint m, IntPtr w, IntPtr l);
     [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindWindowW(string? cls, string? title);

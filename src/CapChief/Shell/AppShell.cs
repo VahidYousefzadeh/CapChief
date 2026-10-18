@@ -1,8 +1,8 @@
 namespace CapChief.Shell;
 
 /// <summary>
-/// Manages the tray icon, the toolbar, the history drop-down, the tool picker and the dialogs, and
-/// passes key presses to commands.
+/// Manages the tray icon, the toolbar, the history drop-down, the tool picker, the About box and the
+/// dialogs, and passes key presses to commands.
 /// </summary>
 public sealed class AppShell : IShell
 {
@@ -18,7 +18,7 @@ public sealed class AppShell : IShell
     private AnnotateStrip? _annotate;
     private Mode _mode = Mode.Idle;
 
-    public AppShell(AppIcon icon, Overlay overlay, ToolbarForm toolbar, HistoryForm historyForm, ToolPickerForm toolPicker, Tools tools, Document document, Review review, CaptureHistory history)
+    public AppShell(AppIcon icon, Overlay overlay, ToolbarForm toolbar, HistoryForm historyForm, ToolPickerForm toolPicker, AboutForm about, Tools tools, Document document, Review review, CaptureHistory history)
     {
         _icon = icon;
         _overlay = overlay;
@@ -29,6 +29,7 @@ public sealed class AppShell : IShell
         Toolbar = toolbar;
         HistoryForm = historyForm;
         ToolPicker = toolPicker;
+        About = about;
 
         tools.Changed += Toolbar.Invalidate;
         ToolPicker.Changed += Toolbar.Invalidate;
@@ -55,18 +56,21 @@ public sealed class AppShell : IShell
 
     public ToolPickerForm ToolPicker { get; }
 
+    public AboutForm About { get; }
+
     public bool IsDialogOpen { get; private set; }
 
     public void Start(Commands commands)
     {
         _commands = commands;
-        _tray = new Tray(_icon, commands);
+        _tray = new Tray(_icon, commands, About.ShowNear);
 
         _annotate = new AnnotateStrip(commands, _tools, _document, ToolPicker);
         _overlay.Create(commands);
         Toolbar.Create(_overlay.Window, (Mode.Idle, new CaptureStrip(commands)), (Mode.Annotating, _annotate), (Mode.Reviewing, new ReviewStrip(commands, _review, new Timeline(_review))));
         HistoryForm.Create(_overlay.Window);
         ToolPicker.Create(_overlay.Window);
+        About.Create(_overlay.Window);
     }
 
     public void ShowTray()
@@ -79,6 +83,7 @@ public sealed class AppShell : IShell
         _tray?.Remove();
         HistoryForm.Free();
         ToolPicker.Free();
+        About.Free();
         Toolbar.Free();
         _overlay.Free();
     }
@@ -171,6 +176,11 @@ public sealed class AppShell : IShell
         if (ToolPicker.IsShown)
         {
             ToolPicker.Hide();
+            hid = true;
+        }
+        if (About.IsShown)
+        {
+            About.Hide();
             hid = true;
         }
         if (hid)

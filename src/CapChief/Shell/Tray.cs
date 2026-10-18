@@ -6,18 +6,20 @@ namespace CapChief.Shell;
 /// </summary>
 public sealed class Tray
 {
-    private const int CaptureItem = 1, TimedItem = 2, RecordItem = 3, ToolbarItem = 4, QuitItem = 5;
+    private const int CaptureItem = 1, TimedItem = 2, RecordItem = 3, ToolbarItem = 4, AboutItem = 5, QuitItem = 6;
 
     private readonly AppIcon _appIcon;
     private readonly Commands _commands;
+    private readonly Action<Point> _showAbout;
     private readonly TrayIcon _icon = new();
 
     private Window _owner = Window.None;
 
-    public Tray(AppIcon appIcon, Commands commands)
+    public Tray(AppIcon appIcon, Commands commands, Action<Point> showAbout)
     {
         _appIcon = appIcon;
         _commands = commands;
+        _showAbout = showAbout;
     }
 
     public void Add(Window owner)
@@ -123,6 +125,7 @@ public sealed class Tray
         }
         menu.Add(ToolbarItem, toolbarText);
         menu.AddSeparator();
+        menu.Add(AboutItem, $"&About {Product.Name}");
         string quitSuffix;
         if (historyKept)
         {
@@ -149,6 +152,10 @@ public sealed class Tray
                 break;
             case ToolbarItem:
                 command = _commands.ToggleToolbar;
+                break;
+            case AboutItem:
+                _showAbout(at);
+                command = null;
                 break;
             case QuitItem:
                 command = _commands.Quit;

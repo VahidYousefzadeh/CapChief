@@ -386,6 +386,30 @@ public static class Theme
         }
     }
 
+    public static Font Title
+    {
+        get
+        {
+            return Font.Of(Length.Of(17f), FontWeights.Semibold, FontFace.SmoothSemibold);
+        }
+    }
+
+    public static Font Caption
+    {
+        get
+        {
+            return Font.Of(Length.Of(12f), FontWeights.Regular, FontFace.Smooth);
+        }
+    }
+
+    public static Font Footnote
+    {
+        get
+        {
+            return Font.Of(Length.Of(11.5f), FontWeights.Regular, FontFace.Smooth);
+        }
+    }
+
     public static Font StepBadge
     {
         get

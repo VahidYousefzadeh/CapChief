@@ -64,10 +64,12 @@ public readonly struct TextFont
 }
 
 /// <summary>
-/// Defines the numeric weights of semibold and bold text.
+/// Defines the numeric weights of regular, semibold and bold text.
 /// </summary>
 public static class FontWeights
 {
+    public const int Regular = 400;
+
     public const int Semibold = 600;
 
     public const int Bold = 700;

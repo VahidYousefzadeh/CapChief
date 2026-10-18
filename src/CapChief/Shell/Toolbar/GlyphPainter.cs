@@ -1,7 +1,7 @@
 namespace CapChief.Shell;
 
 /// <summary>
-/// Draws the icon a toolbar button shows, sized to fit the button.
+/// Draws the icon a toolbar button or an About box row shows, sized to fit it.
 /// </summary>
 public static class GlyphPainter
 {
@@ -12,6 +12,8 @@ public static class GlyphPainter
     private const float BaseShare = 0.24f;
 
     private const float CrossShare = 0.66f, ArrowShare = 0.7f, PenShare = 0.693f;
+
+    private const float LinkShare = 0.91f, LinkOutShare = 0.46f;
 
     private const float BoxShare = 0.81f, EllipseShare = 0.81f, TextShare = 0.723f;
 
@@ -89,6 +91,18 @@ public static class GlyphPainter
             case Glyph.Speed:
                 d.CenteredText(state.Label, r, GlyphStyle.Foreground, Theme.GifMark);
                 break;
+            case Glyph.Globe:
+                LinkGlyphs.Globe(d, cx, cy, Sized(r, LinkShare));
+                break;
+            case Glyph.Code:
+                LinkGlyphs.Code(d, cx, cy, Sized(r, LinkShare));
+                break;
+            case Glyph.Shield:
+                LinkGlyphs.Shield(d, cx, cy, Sized(r, LinkShare));
+                break;
+            case Glyph.LinkOut:
+                LinkGlyphs.LinkOut(d, cx, cy, Sized(r, LinkOutShare));
+                break;
         }
     }
 
@@ -124,7 +138,7 @@ public static class GlyphPainter
 }
 
 /// <summary>
-/// Specifies which icon a toolbar button displays, such as save or pen.
+/// Specifies which icon a toolbar button or an About box row displays, such as save or pen.
 /// </summary>
 public enum Glyph
 {
@@ -150,6 +164,10 @@ public enum Glyph
     Play,
     Pause,
     Speed,
+    Globe,
+    Code,
+    Shield,
+    LinkOut,
 }
 
 /// <summary>

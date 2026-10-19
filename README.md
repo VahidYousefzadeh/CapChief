@@ -13,6 +13,20 @@ NativeAOT, drawn with raw Win32 and GDI+, with no WPF, WinForms or runtime to in
 - **Copy** to the clipboard or **save** as PNG or GIF, and keep the last 10 captures in a history
   until CapChief quits.
 
+## Toolbars
+
+The capture toolbar:
+
+![The capture toolbar](docs/toolbar-capture.png)
+
+While annotating:
+
+![The annotate toolbar](docs/toolbar-annotate.png)
+
+While reviewing a GIF:
+
+![The GIF review toolbar](docs/toolbar-gif.png)
+
 ## Shortcuts
 
 | Global          | Action             |

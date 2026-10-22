@@ -89,6 +89,7 @@ public sealed class Metrics
         Sizes = new MarkSizes
         {
             StrokeWidth = strokeWidth,
+            HighlighterWidth = strokeWidth * 4f,
             ArrowHead = 15f * scale,
             HintWidth = Math.Max(1f, scale),
             BadgeRadius = Length.AtLeast(13f, 14f).Px(scale),

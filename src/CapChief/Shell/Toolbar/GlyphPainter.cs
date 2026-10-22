@@ -11,7 +11,7 @@ public static class GlyphPainter
 
     private const float BaseShare = 0.24f;
 
-    private const float CrossShare = 0.66f, ArrowShare = 0.7f, PenShare = 0.693f;
+    private const float CrossShare = 0.66f, ArrowShare = 0.7f, PenShare = 0.693f, HighlighterShare = 0.75f;
 
     private const float LinkShare = 0.91f, LinkOutShare = 0.46f;
 
@@ -45,6 +45,9 @@ public static class GlyphPainter
                 break;
             case Glyph.Pen:
                 ToolGlyphs.Pen(d, cx, cy, Sized(r, PenShare));
+                break;
+            case Glyph.Highlighter:
+                ToolGlyphs.Highlighter(d, cx, cy, Sized(r, HighlighterShare));
                 break;
             case Glyph.Rectangle:
                 ToolGlyphs.Box(d, cx, cy, Sized(r, BoxShare));
@@ -114,6 +117,8 @@ public static class GlyphPainter
                 return Glyph.Arrow;
             case MarkKind.Pen:
                 return Glyph.Pen;
+            case MarkKind.Highlighter:
+                return Glyph.Highlighter;
             case MarkKind.Rectangle:
                 return Glyph.Rectangle;
             case MarkKind.Ellipse:
@@ -157,6 +162,7 @@ public enum Glyph
     Save,
     Copy,
     Pen,
+    Highlighter,
     Ellipse,
     Trash,
     History,

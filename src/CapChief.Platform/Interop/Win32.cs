@@ -659,6 +659,7 @@ public static class Win32
     [DllImport("gdi32.dll")] public static extern IntPtr CreateCompatibleDC(IntPtr hdc);
     [DllImport("gdi32.dll")] public static extern bool DeleteDC(IntPtr hdc);
     [DllImport("gdi32.dll")] public static extern bool GdiFlush();
+    [DllImport("gdi32.dll")] public static extern int GetClipBox(IntPtr hdc, out Rect rc);
     [DllImport("gdi32.dll")] public static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int w, int h);
     [DllImport("gdi32.dll")] public static extern IntPtr CreateBitmap(int width, int height, uint planes, uint bitcount, byte[] bits);
     [DllImport("gdi32.dll")] public static extern bool StretchBlt(IntPtr dst, int dx, int dy, int dw, int dh, IntPtr src, int sx, int sy, int sw, int sh, uint rop);

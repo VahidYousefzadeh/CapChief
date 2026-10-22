@@ -138,9 +138,10 @@ public sealed class UiDump
         _d.Pick(MarkKind.Text);
         _d.Drag(140, 600, 520, 680);
         _d.Type("Every tool");
+        _d.Draw(MarkKind.Highlighter, 120, 618, 360, 618);
         _d.Pick(MarkKind.Arrow);
         _d.Click(1300, 700);
-        _report.Check(App.Capture?.Marks.Count == 9, $"nine marks, one of each kind and two steps ({App.Capture?.Marks.Count})");
+        _report.Check(App.Capture?.Marks.Count == 10, $"ten marks, one of each kind and two steps ({App.Capture?.Marks.Count})");
         Pictures.Screen(_d, new Rect { Left = 40, Top = 40, Right = 1520, Bottom = 920 }, At("marks-every-kind.png"));
         Pictures.Toolbar(_d, At("toolbar-annotate.png"));
         var open = new Rect { Left = 100, Top = 100, Right = 1100, Bottom = 700 };
@@ -260,6 +261,10 @@ public sealed class UiDump
         _report.Check(picker.HangsFrom(App.Commands.TextTool) && App.Tools.CurrentTool == MarkKind.Text, "with the list open, one click on the text button picks text and moves the drop-down to its pair");
         _d.ClickToolbarButton(App.Commands.TextTool);
         _report.Check(!picker.IsShown, "and a click on the same button closes it");
+        _d.ClickToolbarButton(App.Commands.ArrowTool);
+        _report.Check(picker.HangsFrom(App.Commands.ArrowTool), "the arrow button drops down the arrow, the pen and the highlighter");
+        Pictures.Image(picker.Pixels, At("picker-arrow-tools.png"));
+        _d.ClickToolbarButton(App.Commands.ArrowTool);
         _d.ClickToolbarButton(App.Commands.RectangleTool);
         _d.ClickToolbarButton(App.Commands.TextTool);
         _d.Key(Keys.Enter);

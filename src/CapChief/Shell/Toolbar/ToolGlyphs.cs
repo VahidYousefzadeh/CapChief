@@ -66,6 +66,43 @@ public static class ToolGlyphs
         d.Fill(p, GlyphStyle.Foreground);
     }
 
+    public static void Highlighter(DrawContext d, float cx, float cy, float s)
+    {
+        float x0 = cx - s;
+        float y0 = cy + s;
+        float dx = s * 2;
+        float dy = -s * 2;
+        float len = MathF.Sqrt(dx * dx + dy * dy);
+        float nx = -dy / len * s * 0.55f;
+        float ny = dx / len * s * 0.55f;
+
+        float slantX = x0 + dx * 0.12f;
+        float slantY = y0 + dy * 0.12f;
+        float tipEndX = x0 + dx * 0.3f;
+        float tipEndY = y0 + dy * 0.3f;
+        float bodyX = x0 + dx * 0.36f;
+        float bodyY = y0 + dy * 0.36f;
+        float bodyEndX = x0 + dx * 0.78f;
+        float bodyEndY = y0 + dy * 0.78f;
+        float capX = x0 + dx * 0.84f;
+        float capY = y0 + dy * 0.84f;
+        float endX = x0 + dx;
+        float endY = y0 + dy;
+
+        using Outline p = d.NewFigure(winding: true);
+        p.Line(x0 + nx * 0.6f, y0 + ny * 0.6f, slantX - nx * 0.6f, slantY - ny * 0.6f);
+        p.Line(slantX - nx * 0.6f, slantY - ny * 0.6f, tipEndX - nx * 0.75f, tipEndY - ny * 0.75f);
+        p.Line(tipEndX - nx * 0.75f, tipEndY - ny * 0.75f, tipEndX + nx * 0.75f, tipEndY + ny * 0.75f);
+        p.Close();
+        p.Line(bodyX + nx, bodyY + ny, bodyEndX + nx, bodyEndY + ny);
+        p.Line(bodyEndX - nx, bodyEndY - ny, bodyX - nx, bodyY - ny);
+        p.Close();
+        p.Line(capX + nx, capY + ny, endX + nx, endY + ny);
+        p.Line(endX - nx, endY - ny, capX - nx, capY - ny);
+        p.Close();
+        d.Fill(p, GlyphStyle.Foreground);
+    }
+
     public static void Text(DrawContext d, float cx, float cy, float s)
     {
         StrokeStyle stroke = GlyphStyle.IconStroke(d);

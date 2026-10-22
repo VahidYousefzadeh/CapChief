@@ -1,7 +1,8 @@
 namespace CapChief.Graphics;
 
 /// <summary>
-/// Draws arrows, boxes, ellipses, freehand strokes, pixelated areas and labeled discs on a surface.
+/// Draws arrows, boxes, ellipses, freehand strokes, highlighter strokes, pixelated areas and labeled
+/// discs on a surface.
 /// </summary>
 public sealed class Shapes
 {
@@ -10,6 +11,11 @@ public sealed class Shapes
     private const float CurveTension = 0.5f;
 
     private const double BarbSpread = Math.PI / 6;
+
+    private const uint White = 0x00FFFFFFu;
+
+    private readonly Surface _ink = new();
+    private readonly Surface _under = new();
 
     private PointF[] _strokeBuf = new PointF[StrokeInitial];
 
@@ -113,6 +119,63 @@ public sealed class Shapes
         using var br = new Brush(Argb.ToArgb(colorRef));
         float hr = width * 0.5f;
         Win32.GdipFillEllipse(g, br, _strokeBuf[0].X - hr, _strokeBuf[0].Y - hr, width, width);
+    }
+
+    // Multiplies what is under the stroke by its color, like highlighter ink: text stays readable and
+    // a stroke that crosses itself does not get darker where it overlaps.
+    public void DrawHighlight(DeviceContext dc, ReadOnlySpan<Point> pts, Point offset, uint colorRef, float width)
+    {
+        if (pts.Length < 1 || Win32.GetClipBox(dc, out Rect clip) <= Win32.NULLREGION)
+        {
+            return;
+        }
+        Rect box = Rect.Intersect(StrokeBox(pts, offset, (int)MathF.Ceiling(width / 2) + 2), clip);
+        if (box.IsEmpty || !_ink.EnsureAtLeast(box.Width, box.Height) || !_under.EnsureAtLeast(box.Width, box.Height))
+        {
+            return;
+        }
+
+        Rect area = Rect.At(0, 0, box.Width, box.Height);
+        _ink.DeviceContext.FillRect(area, White);
+        DrawStroke(_ink.DeviceContext, pts, offset - box.TopLeft, colorRef, width);
+        _under.DeviceContext.Blit(area, dc, box.Left, box.Top);
+        DeviceContext.Flush();
+        Multiply(_under.Pixels, _under.Width * 4, _ink.Pixels, _ink.Width * 4, box.Width, box.Height);
+        dc.Blit(box, _under.DeviceContext, 0, 0);
+    }
+
+    private static Rect StrokeBox(ReadOnlySpan<Point> pts, Point offset, int pad)
+    {
+        var box = new Rect
+        {
+            Left = pts[0].X,
+            Top = pts[0].Y,
+            Right = pts[0].X,
+            Bottom = pts[0].Y,
+        };
+        foreach (Point p in pts)
+        {
+            box.Left = Math.Min(box.Left, p.X);
+            box.Top = Math.Min(box.Top, p.Y);
+            box.Right = Math.Max(box.Right, p.X);
+            box.Bottom = Math.Max(box.Bottom, p.Y);
+        }
+        return box.Moved(offset).Inflated(pad);
+    }
+
+    private static void Multiply(Span<byte> under, int underStride, ReadOnlySpan<byte> ink, int inkStride, int w, int h)
+    {
+        for (int y = 0; y < h; y++)
+        {
+            Span<byte> row = under.Slice(y * underStride, w * 4);
+            ReadOnlySpan<byte> tint = ink.Slice(y * inkStride, w * 4);
+            for (int i = 0; i < row.Length; i += 4)
+            {
+                row[i] = (byte)((row[i] * tint[i] + 127) / 255);
+                row[i + 1] = (byte)((row[i + 1] * tint[i + 1] + 127) / 255);
+                row[i + 2] = (byte)((row[i + 2] * tint[i + 2] + 127) / 255);
+            }
+        }
     }
 
     public void Pixelate(DeviceContext dc, DeviceContext from, Rect dst, Rect src, int block)

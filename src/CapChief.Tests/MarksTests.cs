@@ -68,11 +68,13 @@ public sealed class MarksTests
         Assert.False(new MosaicMark().TakesColor, "a mosaic takes no color");
         Assert.True(Mark.Create(MarkKind.Arrow) is ArrowMark, "the arrow tool draws an arrow");
         Assert.True(Mark.Create(MarkKind.Pen) is PenMark, "the pen draws a freehand stroke");
+        Assert.True(Mark.Create(MarkKind.Highlighter) is HighlighterMark, "the highlighter draws a highlighter stroke");
         Assert.True(Mark.Create(MarkKind.Step) is StepMark, "the step tool draws a numbered step");
         Assert.True(Mark.Create(MarkKind.Text) is TextMark, "the text tool draws text");
 
         Eq(Tools.FirstIn(ToolGroup.Arrow), MarkKind.Arrow, "the arrow button starts on the arrow");
         Eq(Tools.GroupOf(MarkKind.Pen), ToolGroup.Arrow, "and holds the pen too");
+        Eq(Tools.GroupOf(MarkKind.Highlighter), ToolGroup.Arrow, "and the highlighter");
         Eq(Tools.FirstIn(ToolGroup.Rect), MarkKind.Rectangle, "the rect button starts on the rectangle");
         Eq(Tools.GroupOf(MarkKind.Ellipse), ToolGroup.Rect, "and holds the ellipse too");
         Eq(Tools.FirstIn(ToolGroup.Text), MarkKind.Text, "the text button starts on text");

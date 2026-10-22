@@ -99,7 +99,7 @@ public sealed class Tools
     {
         switch (kind)
         {
-            case MarkKind.Arrow or MarkKind.Pen:
+            case MarkKind.Arrow or MarkKind.Pen or MarkKind.Highlighter:
                 return ToolGroup.Arrow;
             case MarkKind.Rectangle or MarkKind.Ellipse:
                 return ToolGroup.Rect;

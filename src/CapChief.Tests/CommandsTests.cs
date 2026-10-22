@@ -173,6 +173,8 @@ public sealed class CommandsTests : IDisposable
         Eq(App.Tools.CurrentTool, MarkKind.Pen, "P picks the pen");
         _run.Keystroke(Key.P);
         Eq(App.Tools.CurrentTool, MarkKind.Pen, "pressed again, it stays on the pen");
+        _run.Keystroke(Key.H);
+        Eq(App.Tools.CurrentTool, MarkKind.Highlighter, "H picks the highlighter");
     }
 
     [Fact]

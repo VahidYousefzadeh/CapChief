@@ -45,6 +45,17 @@ public readonly record struct Color
         return new(argb);
     }
 
+    public Color Lightened(float share)
+    {
+        uint argb = _argb & 0xFF000000u;
+        for (int shift = 0; shift < 24; shift += 8)
+        {
+            int c = (int)((_argb >> shift) & 0xFF);
+            argb |= (uint)(c + (int)MathF.Round((255 - c) * share)) << shift;
+        }
+        return FromArgb(argb);
+    }
+
     public Color ContrastingTextColor()
     {
         int r = (int)((_argb >> 16) & 0xFF);

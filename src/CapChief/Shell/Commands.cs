@@ -341,6 +341,9 @@ public sealed class Commands
             case MarkKind.Pen:
                 key = Key.P;
                 break;
+            case MarkKind.Highlighter:
+                key = Key.H;
+                break;
             case MarkKind.Rectangle:
                 key = Key.R;
                 break;
@@ -373,6 +376,8 @@ public sealed class Commands
                 return "Arrow";
             case MarkKind.Pen:
                 return "Pen";
+            case MarkKind.Highlighter:
+                return "Highlighter";
             case MarkKind.Rectangle:
                 return "Rectangle";
             case MarkKind.Ellipse:

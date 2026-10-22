@@ -237,6 +237,8 @@ public abstract record Mark
                 return new BlackoutMark();
             case MarkKind.Step:
                 return new StepMark();
+            case MarkKind.Highlighter:
+                return new HighlighterMark();
             default:
                 throw new ArgumentOutOfRangeException(nameof(kind), kind, null);
         }
@@ -347,7 +349,7 @@ public sealed record ArrowMark : Mark
 /// <summary>
 /// Represents a freehand line drawn on a screenshot by dragging the pen.
 /// </summary>
-public sealed record PenMark : Mark
+public record PenMark : Mark
 {
     public Polyline? Path { get; init; }
 
@@ -421,6 +423,41 @@ public sealed record PenMark : Mark
     public override Rect Extent(MarkSizes sizes)
     {
         return base.Extent(sizes).Inflated(Math.Max(Bounds.Width, Bounds.Height) / 6);
+    }
+}
+
+/// <summary>
+/// Represents a wide freehand stroke that tints the screenshot under it, like a highlighter pen.
+/// </summary>
+public sealed record HighlighterMark : PenMark
+{
+    public override MarkKind Kind
+    {
+        get
+        {
+            return MarkKind.Highlighter;
+        }
+    }
+
+    public override bool CanMoveAsImage
+    {
+        get
+        {
+            return false;
+        }
+    }
+
+    public override void Draw(MarkPainter painter)
+    {
+        if (Path is { } path)
+        {
+            painter.Highlight(path, Color);
+        }
+    }
+
+    public override Rect Extent(MarkSizes sizes)
+    {
+        return base.Extent(sizes).Inflated((int)MathF.Ceiling((sizes.HighlighterWidth - sizes.StrokeWidth) / 2));
     }
 }
 
@@ -663,6 +700,7 @@ public enum MarkKind
     Ellipse,
     Blackout,
     Step,
+    Highlighter,
 }
 
 /// <summary>
@@ -671,6 +709,8 @@ public enum MarkKind
 public readonly struct MarkSizes
 {
     public float StrokeWidth { get; init; }
+
+    public float HighlighterWidth { get; init; }
 
     public float ArrowHead { get; init; }
 

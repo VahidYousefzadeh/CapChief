@@ -8,6 +8,8 @@ public sealed class MarkPainter
 {
     public const uint TextFormat = TextLayout.Wrap;
 
+    private const float HighlighterLightening = 0.5f;
+
     private readonly Metrics _metrics;
     private readonly Shapes _shapes = new();
 
@@ -123,6 +125,11 @@ public sealed class MarkPainter
     public void Stroke(Polyline path, Color color)
     {
         _shapes.DrawStroke(_dc, path.Points, _shift, color.ColorRef, Sizes.StrokeWidth);
+    }
+
+    public void Highlight(Polyline path, Color color)
+    {
+        _shapes.DrawHighlight(_dc, path.Points, _shift, color.Lightened(HighlighterLightening).ColorRef, Sizes.HighlighterWidth);
     }
 
     public void Fill(Rect r, Color color)

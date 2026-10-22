@@ -157,6 +157,14 @@ public sealed class Drawing
         }
     }
 
+    public bool HasMarksOnImage
+    {
+        get
+        {
+            return _gesture is DraggingCrop { IsOnImage: true };
+        }
+    }
+
     public bool IsEditingText
     {
         get
@@ -315,16 +323,56 @@ public sealed class Drawing
     private void StartDraggingCrop(Point p, Grip g)
     {
         LineFinder? lines;
+        bool onImage;
         if (g == Grip.Move)
         {
             lines = null;
+            onImage = ShowMarksOnImage();
         }
         else
         {
             lines = LineFinder.Of(Capture.Picture, _metrics.Scale);
+            onImage = false;
         }
-        _gesture = new DraggingCrop(p, g, Capture.Crop) { Lines = lines };
+        _gesture = new DraggingCrop(p, g, Capture.Crop) { Lines = lines, IsOnImage = onImage };
         _overlay.InvalidateSizeLabel(Capture.Crop);
+        if (onImage)
+        {
+            InvalidateMarksOnImage();
+        }
+    }
+
+    /// <summary>
+    /// Shows the drag image with the marks that can move as a picture, as when a mark is moved on
+    /// its own, so they ride along with the area rather than being drawn again at every step.
+    /// </summary>
+    private bool ShowMarksOnImage()
+    {
+        var onImage = new List<Mark>();
+        foreach (Mark mark in Marks.All)
+        {
+            if (mark.CanMoveAsImage)
+            {
+                onImage.Add(mark);
+            }
+        }
+        Mark? selected = _document.SelectedMark;
+        if (selected is { CanMoveAsImage: false })
+        {
+            selected = null;
+        }
+        return onImage.Count > 0 && _dragImage.Show(Capture, onImage, selected);
+    }
+
+    private void InvalidateMarksOnImage()
+    {
+        foreach (Mark mark in Marks.All)
+        {
+            if (mark.CanMoveAsImage)
+            {
+                _overlay.InvalidateMark(mark, selected: true, backdrop: true);
+            }
+        }
     }
 
     public void Drag(Point p, bool shift, bool alt)
@@ -419,8 +467,16 @@ public sealed class Drawing
         {
             return;
         }
+        if (drag.IsOnImage)
+        {
+            _dragImage.Move(MarksOffset);
+        }
         foreach (Mark mark in Marks.All)
         {
+            if (drag.IsOnImage && mark.CanMoveAsImage)
+            {
+                continue;
+            }
             _overlay.InvalidateMark(mark.Moved(wasOffset), selected: true, backdrop: true);
             _overlay.InvalidateMark(mark.Moved(MarksOffset), selected: true, backdrop: true);
         }
@@ -468,6 +524,11 @@ public sealed class Drawing
         if (drag.Crop != drag.Before)
         {
             _document.ChangeCrop(drag.Crop);
+        }
+        if (drag.IsOnImage)
+        {
+            InvalidateMarksOnImage();
+            _dragImage.Hide();
         }
     }
 
@@ -645,6 +706,8 @@ public sealed record DraggingCrop(Point PressedAt, Grip Grip, Crop Before) : Ges
     public Crop Crop { get; init; } = Before;
 
     public LineFinder? Lines { get; init; }
+
+    public bool IsOnImage { get; init; }
 }
 
 /// <summary>

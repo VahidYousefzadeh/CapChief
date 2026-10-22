@@ -113,6 +113,7 @@ public sealed class OverlayPainter
         _buffer.Free();
         _dim.Free();
         _stale.Free();
+        _markPainter.Free();
         EndToast();
         Show(OverlayContent.None);
     }
@@ -204,7 +205,7 @@ public sealed class OverlayPainter
 
             if (_content == OverlayContent.Annotating && _document.Capture is { } capture)
             {
-                _markPainter.DrawMarks(backdrop, capture, box, _drawing.EditedIndex, _drawing.MarksOffset);
+                _markPainter.DrawMarks(backdrop, capture, box, _drawing.EditedIndex, _drawing.MarksOffset, _drawing.HasMarksOnImage);
             }
         }
         _stale.Free();
@@ -280,7 +281,8 @@ public sealed class OverlayPainter
             {
                 _markPainter.DrawMark(dc, capture, dragged, marks.StepNumberOf(_drawing.DraggedIndex), default);
             }
-            if ((_drawing.DraggedMark ?? _document.SelectedMark?.Moved(_drawing.MarksOffset)) is { } selected)
+            bool gripsOnImage = _drawing.HasMarksOnImage &&_document.SelectedMark is { CanMoveAsImage: true };
+            if (!gripsOnImage && (_drawing.DraggedMark ?? _document.SelectedMark?.Moved(_drawing.MarksOffset)) is { } selected)
             {
                 _markPainter.DrawSelectedMark(dc, selected);
             }

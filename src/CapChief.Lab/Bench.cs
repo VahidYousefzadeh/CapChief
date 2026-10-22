@@ -7,6 +7,7 @@ namespace CapChief.Lab;
 public sealed class Bench
 {
     private const int Moves = 60;
+    private const int ScribblePoints = 3000;
 
     private readonly Driver _d;
     private readonly Report _report = new("bench");
@@ -58,6 +59,7 @@ public sealed class Bench
         Time("resize the area by its corner", _d.TimeMoves(i => At(crop.Right - i * 5, crop.Bottom - i * 3), Moves));
         _d.Release(crop.Right - Moves * 5, crop.Bottom - Moves * 3);
         _report.Check(capture.Crop.Bounds.Right == crop.Right - Moves * 5, "the area was resized");
+        MoveArea("move the area by its edge", 3, 2);
 
         Draw(MarkKind.Ellipse, "draw a screen-sized ellipse", w / 10, h / 10, w * 8 / 10, h * 8 / 10);
         Draw(MarkKind.Rectangle, "draw a screen-sized rectangle", w / 8, h / 8, w * 6 / 8, h * 6 / 8);
@@ -82,6 +84,69 @@ public sealed class Bench
         Time("resize the screen-sized ellipse", _d.TimeMoves(i => At(before.Right - i * 5, before.Bottom - i * 3), Moves));
         _d.Release(before.Right - Moves * 5, before.Bottom - Moves * 3);
         _report.Check(capture.Marks[ellipse].Bounds != before, "the ellipse was resized");
+
+        MoveArea("move the area with the four marks", -3, -2);
+        Scribble(MarkKind.Pen, 1.0);
+        MoveArea("move the area with a pen scribble too", 3, 2);
+        Scribble(MarkKind.Highlighter, 0.7);
+        MoveArea("move the area with a highlighter scribble too", -3, -2);
+
+        Rect area = capture.Crop;
+        _d.Press(area.Right, area.Bottom);
+        Time("resize the area with both scribbles", _d.TimeMoves(i => At(area.Right - i * 2, area.Bottom - i), Moves));
+        _d.Release(area.Right - Moves * 2, area.Bottom - Moves);
+        _report.Check(capture.Crop.Width < area.Width && capture.Crop.Height < area.Height, "the area with the scribbles was resized");
+    }
+
+    private void MoveArea(string what, int dx, int dy)
+    {
+        Capture capture = App.Capture!;
+        Rect before = capture.Crop;
+        Rect[] marks = capture.Marks.All.Select(m => m.Bounds).ToArray();
+        Point on = At(before.Left + before.Width / 4, before.Top);
+        _d.Press(on.X, on.Y);
+        _report.Check(App.Drawing.IsDraggingCrop, "the press took hold of the area's edge");
+        Time(what, _d.TimeMoves(i => At(on.X + i * dx, on.Y + i * dy), Moves));
+        _d.Release(on.X + Moves * dx, on.Y + Moves * dy);
+        var moved = new Point(Moves * dx, Moves * dy);
+        bool marksMoved = capture.Marks.All.Select(m => m.Bounds).SequenceEqual(marks.Select(r => r.Moved(moved)));
+        _report.Check(capture.Crop.Bounds == before.Moved(moved) && marksMoved, $"the area moved with its {marks.Length} marks");
+    }
+
+    private void Scribble(MarkKind kind, double spread)
+    {
+        Capture capture = App.Capture!;
+        Rect area = capture.Crop;
+        int count = capture.Marks.Count;
+        int first = 0;
+        while (first < ScribblePoints && App.Workflow.CursorAt(ScribblePoint(area, first, spread)) != Cursor.Draw)
+        {
+            first++;
+        }
+        _d.Pick(kind);
+        Point start = ScribblePoint(area, first, spread);
+        _d.Press(start.X, start.Y);
+        for (int i = first + 1; i <= first + ScribblePoints; i++)
+        {
+            Point p = ScribblePoint(area, i, spread);
+            _d.Move(p.X, p.Y);
+        }
+        Point end = ScribblePoint(area, first + ScribblePoints, spread);
+        _d.Release(end.X, end.Y);
+        App.Overlay.Window.PaintNow();
+        _report.Check(capture.Marks.Count == count + 1 && capture.Marks[^1] is PenMark { Samples: > ScribblePoints / 2 } pen && pen.Kind == kind, $"a long {kind} scribble drawn");
+    }
+
+    /// <summary>
+    /// Gives point i of a path that loops round and round the middle of the area, the way the pen
+    /// goes in a busy scribble.
+    /// </summary>
+    private static Point ScribblePoint(Rect area, int i, double spread)
+    {
+        double t = 2 * Math.PI * i / ScribblePoints;
+        int x = area.Center.X + (int)(area.Width * spread * (0.3 * Math.Sin(3 * t) + 0.1 * Math.Sin(41 * t)));
+        int y = area.Center.Y + (int)(area.Height * spread * (0.3 * Math.Cos(2 * t) + 0.1 * Math.Cos(37 * t)));
+        return new(x, y);
     }
 
     private void Draw(MarkKind kind, string what, int x1, int y1, int x2, int y2)

@@ -12,6 +12,7 @@ public sealed class MarkPainter
 
     private readonly Metrics _metrics;
     private readonly Shapes _shapes = new();
+    private readonly Dictionary<Mark, Ink> _inks = new(ReferenceEqualityComparer.Instance);
 
     private DeviceContext _dc;
     private Point _shift;
@@ -32,12 +33,20 @@ public sealed class MarkPainter
         }
     }
 
-    public void DrawMarks(DeviceContext dc, Capture capture, Rect area, int skip, Point offset)
+    public void DrawMarks(DeviceContext dc, Capture capture, Rect area, int skip, Point offset, bool marksOnImage)
     {
         Begin(dc, capture, default, drawsEmptyText: true);
+        if (offset == default)
+        {
+            Free();
+        }
         Marks marks = capture.Marks;
         for (int i = 0; i < marks.Count; i++)
         {
+            if (i == skip || (marksOnImage && marks[i].CanMoveAsImage))
+            {
+                continue;
+            }
             Mark mark;
             if (offset == default)
             {
@@ -47,8 +56,13 @@ public sealed class MarkPainter
             {
                 mark = marks[i].Moved(offset);
             }
-            if (i == skip || !mark.Extent(Sizes).Overlaps(area))
+            if (!mark.Extent(Sizes).Overlaps(area))
             {
+                continue;
+            }
+            if (offset != default && marks[i] is HighlighterMark highlighter)
+            {
+                DrawMovedHighlight(highlighter, offset);
                 continue;
             }
             _step = marks.StepNumberOf(i);
@@ -92,12 +106,45 @@ public sealed class MarkPainter
         dc.FillRect(r.Inflated(-1), Palette.AccentRef);
     }
 
+    public void Free()
+    {
+        foreach (Ink ink in _inks.Values)
+        {
+            ink.Free();
+        }
+        _inks.Clear();
+    }
+
     private void Begin(DeviceContext dc, Capture capture, Point shift, bool drawsEmptyText)
     {
         _dc = dc;
         _capture = capture;
         _shift = shift;
         _drawsEmptyText = drawsEmptyText;
+    }
+
+    /// <summary>
+    /// Draws a highlighter while the marks move with the area: it keeps the ink it was first drawn
+    /// with, and only tints what is under it at each step.
+    /// </summary>
+    private void DrawMovedHighlight(HighlighterMark mark, Point offset)
+    {
+        if (mark.Path is not { } path)
+        {
+            return;
+        }
+        if (!_inks.TryGetValue(mark, out Ink? ink))
+        {
+            ink = new Ink();
+            _shapes.DrawInk(ink, path.Points, InkColor(mark.Color), Sizes.HighlighterWidth);
+            _inks.Add(mark, ink);
+        }
+        _shapes.Tint(_dc, ink, offset);
+    }
+
+    private static uint InkColor(Color color)
+    {
+        return color.Lightened(HighlighterLightening).ColorRef;
     }
 
     private Rect At(Rect r)
@@ -129,7 +176,7 @@ public sealed class MarkPainter
 
     public void Highlight(Polyline path, Color color)
     {
-        _shapes.DrawHighlight(_dc, path.Points, _shift, color.Lightened(HighlighterLightening).ColorRef, Sizes.HighlighterWidth);
+        _shapes.DrawHighlight(_dc, path.Points, _shift, InkColor(color), Sizes.HighlighterWidth);
     }
 
     public void Fill(Rect r, Color color)

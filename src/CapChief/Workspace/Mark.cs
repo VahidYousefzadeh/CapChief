@@ -457,7 +457,9 @@ public sealed record HighlighterMark : PenMark
 
     public override Rect Extent(MarkSizes sizes)
     {
-        return base.Extent(sizes).Inflated((int)MathF.Ceiling((sizes.HighlighterWidth - sizes.StrokeWidth) / 2));
+        // Unlike a pen line, highlighter ink is cut off at the box around the points, so it needs
+        // no room for the curve to bow out.
+        return Bounds.Inflated(Shapes.InkPad(sizes.HighlighterWidth));
     }
 }
 

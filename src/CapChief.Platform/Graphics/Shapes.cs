@@ -121,26 +121,87 @@ public sealed class Shapes
         Win32.GdipFillEllipse(g, br, _strokeBuf[0].X - hr, _strokeBuf[0].Y - hr, width, width);
     }
 
-    // Multiplies what is under the stroke by its color, like highlighter ink: text stays readable and
-    // a stroke that crosses itself does not get darker where it overlaps.
+    /// <summary>
+    /// Multiplies what is under the stroke by its color, like highlighter ink: text stays readable
+    /// and a stroke that crosses itself does not get darker where it overlaps.
+    /// </summary>
     public void DrawHighlight(DeviceContext dc, ReadOnlySpan<Point> pts, Point offset, uint colorRef, float width)
     {
         if (pts.Length < 1 || Win32.GetClipBox(dc, out Rect clip) <= Win32.NULLREGION)
         {
             return;
         }
-        Rect box = Rect.Intersect(StrokeBox(pts, offset, (int)MathF.Ceiling(width / 2) + 2), clip);
-        if (box.IsEmpty || !_ink.EnsureAtLeast(box.Width, box.Height) || !_under.EnsureAtLeast(box.Width, box.Height))
+        Rect box = Rect.Intersect(StrokeBox(pts, offset, InkPad(width)), clip);
+        if (box.IsEmpty || !_ink.EnsureAtLeast(box.Width, box.Height))
+        {
+            return;
+        }
+        PaintInk(_ink, box.Width, box.Height, pts, offset - box.TopLeft, colorRef, width);
+        Tint(dc, _ink, box);
+    }
+
+    /// <summary>
+    /// Draws a highlighter stroke's ink once, so a stroke that only moves can tint what is under it
+    /// at each step without being drawn again.
+    /// </summary>
+    public void DrawInk(Ink ink, ReadOnlySpan<Point> pts, uint colorRef, float width)
+    {
+        ink.Free();
+        if (pts.Length < 1)
+        {
+            return;
+        }
+        Rect box = StrokeBox(pts, default, InkPad(width));
+        if (!ink.Pixels.OpenDib(box.Width, box.Height))
+        {
+            return;
+        }
+        ink.Box = box;
+        PaintInk(ink.Pixels, box.Width, box.Height, pts, -box.TopLeft, colorRef, width);
+    }
+
+    public void Tint(DeviceContext dc, Ink ink, Point offset)
+    {
+        if (ink.Pixels.IsOpen)
+        {
+            Tint(dc, ink.Pixels, ink.Box.Moved(offset));
+        }
+    }
+
+    /// <summary>
+    /// Gives how far highlighter ink reaches past the box around the stroke's points.
+    /// </summary>
+    public static int InkPad(float width)
+    {
+        return (int)MathF.Ceiling(width / 2) + 2;
+    }
+
+    private void PaintInk(Surface ink, int w, int h, ReadOnlySpan<Point> pts, Point offset, uint colorRef, float width)
+    {
+        ink.DeviceContext.FillRect(Rect.At(0, 0, w, h), White);
+        DrawStroke(ink.DeviceContext, pts, offset, colorRef, width);
+    }
+
+    /// <summary>
+    /// Multiplies what is under the rectangle by the ink, whose top left pixel lies on the
+    /// rectangle's top left corner.
+    /// </summary>
+    private void Tint(DeviceContext dc, Surface ink, Rect at)
+    {
+        if (Win32.GetClipBox(dc, out Rect clip) <= Win32.NULLREGION)
+        {
+            return;
+        }
+        Rect box = Rect.Intersect(at, clip);
+        if (box.IsEmpty || !_under.EnsureAtLeast(box.Width, box.Height))
         {
             return;
         }
 
-        Rect area = Rect.At(0, 0, box.Width, box.Height);
-        _ink.DeviceContext.FillRect(area, White);
-        DrawStroke(_ink.DeviceContext, pts, offset - box.TopLeft, colorRef, width);
-        _under.DeviceContext.Blit(area, dc, box.Left, box.Top);
+        _under.DeviceContext.Blit(Rect.At(0, 0, box.Width, box.Height), dc, box.Left, box.Top);
         DeviceContext.Flush();
-        Multiply(_under.Pixels, _under.Width * 4, _ink.Pixels, _ink.Width * 4, box.Width, box.Height);
+        int skipped = ((box.Top - at.Top) * ink.Width + box.Left - at.Left) * 4;
+        Multiply(_under.Pixels, _under.Width * 4, ink.Pixels[skipped..], ink.Width * 4, box.Width, box.Height);
         dc.Blit(box, _under.DeviceContext, 0, 0);
     }
 

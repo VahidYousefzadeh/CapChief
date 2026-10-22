@@ -193,6 +193,21 @@ public sealed class UiDump
         _report.Check(App.Capture?.Marks[ellipse].Bounds == moved, "redo moves it again");
         SameAsFullRepaint("after undo and redo");
 
+        on = _d.PointOn(ellipse);
+        _d.Click(on.X, on.Y);
+        Rect area = App.Capture!.Crop;
+        var edge = new Point(area.Left + area.Width / 4, area.Top);
+        _d.Press(edge.X, edge.Y);
+        _d.Move(edge.X + 30, edge.Y + 20);
+        _report.Check(App.Drawing.HasMarksOnImage &&App.Document.SelectedIndex == ellipse, "moving the area lifts its pen, arrow and selected ellipse onto the drag image");
+        Pictures.DragImage(_d, At("marks-area-drag-image.png"));
+        SameAsFullRepaint("the area being moved");
+        _d.Release(edge.X + 30, edge.Y + 20);
+        _report.Check(App.Capture.Crop.Bounds == area.Moved(new Point(30, 20)) && App.Capture.Marks[ellipse].Bounds == moved.Moved(new Point(30, 20)), "the area moved with the pointer, its marks with it");
+        SameAsFullRepaint("the area dropped");
+        App.Workspace.Undo();
+        _report.Check(App.Capture.Crop.Bounds == area && App.Capture.Marks[ellipse].Bounds == moved, "undo puts the area and its marks back");
+
         var clipboard = new ClipboardCheck(App, _report);
         Capture copied = App.Capture!;
         byte[]? drawn = clipboard.Render(copied);

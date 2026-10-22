@@ -1,7 +1,8 @@
 namespace CapChief.Shell;
 
 /// <summary>
-/// Represents the picture of a mark that follows the pointer while the mark is moved.
+/// Represents the picture that follows the pointer while a mark is moved, or while the area moves
+/// with its marks.
 /// </summary>
 public sealed class MarkDragImage
 {
@@ -31,21 +32,40 @@ public sealed class MarkDragImage
 
     public bool Show(Capture capture, Mark mark)
     {
+        return Show(capture, [mark], mark);
+    }
+
+    public bool Show(Capture capture, IReadOnlyList<Mark> marks, Mark? selected)
+    {
         int grip = _metrics.Tolerance.GripRadius;
-        Rect r = mark.SelectedExtent(_metrics.Sizes, grip);
+        Rect r = default;
+        foreach (Mark mark in marks)
+        {
+            r = Rect.UnionIgnoringEmpty(r, mark.Extent(_metrics.Sizes));
+        }
+        if (selected is not null)
+        {
+            r = Rect.UnionIgnoringEmpty(r, selected.SelectedExtent(_metrics.Sizes, grip));
+        }
         if (!_owner.Exists || !_pixels.Open(r.Width, r.Height))
         {
             return false;
         }
 
         Point shift = -r.TopLeft;
-        _markPainter.DrawMark(_pixels.DeviceContext, capture, mark, 0, shift);
-        _pixels.Seal();
-        foreach (Grip g in mark.Grips)
+        foreach (Mark mark in marks)
         {
-            Rect at = mark.GripRect(g, grip).Moved(shift);
-            MarkPainter.DrawGrip(_pixels.DeviceContext, at);
-            _pixels.Opaque(at);
+            _markPainter.DrawMark(_pixels.DeviceContext, capture, mark, 0, shift);
+        }
+        _pixels.Seal();
+        if (selected is not null)
+        {
+            foreach (Grip g in selected.Grips)
+            {
+                Rect at = selected.GripRect(g, grip).Moved(shift);
+                MarkPainter.DrawGrip(_pixels.DeviceContext, at);
+                _pixels.Opaque(at);
+            }
         }
 
         Rect on = _desk.ToScreen(r);

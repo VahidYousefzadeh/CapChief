@@ -6,7 +6,7 @@
   IgnorableNamespaces="uap rescap">
 
   <!-- Keep Version in step with <Version> in src/CapChief/CapChief.csproj. The Store wants the last number to be 0. -->
-  <Identity Name="VahidYousefzadeh.CapChief" Publisher="CN=B6479BF0-38FB-497E-AE35-0C905EF4C713" Version="1.0.0.0" ProcessorArchitecture="x64" />
+  <Identity Name="VahidYousefzadeh.CapChief" Publisher="CN=B6479BF0-38FB-497E-AE35-0C905EF4C713" Version="1.1.0.0" ProcessorArchitecture="x64" />
 
   <Properties>
     <DisplayName>CapChief</DisplayName>

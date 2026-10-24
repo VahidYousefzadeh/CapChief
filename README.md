@@ -6,8 +6,8 @@ NativeAOT, drawn with raw Win32 and GDI+, with no WPF, WinForms or runtime to in
 ## Features
 
 - **Capture** a region of the screen, right away or after a countdown.
-- **Annotate** with arrows, rectangles, ellipses, a pen, a highlighter, text, numbered steps, and
-  mosaic or blackout redaction.
+- **Annotate** with arrows, rectangles, ellipses, a pen, a highlighter, text in four sizes, numbered
+  steps, and mosaic or blackout redaction.
 - **Record a GIF** of a region, then review it, trim the start and end, and change the speed
   before saving.
 - **Copy** to the clipboard or **save** as PNG or GIF, and keep the last 10 captures in a history
@@ -52,6 +52,7 @@ While annotating:
 | `A` `R` `E` `P` `H` `T` `N` | Arrow, rectangle, ellipse, pen, highlighter, text, numbered step |
 | `M` `B`         | Mosaic and blackout redaction   |
 | `1`-`6`         | Pick a color (`Ctrl+Left`/`Ctrl+Right` to step through them) |
+| `Ctrl+Plus` / `Ctrl+Minus` or `Ctrl`+wheel | Make the text being typed or the selected text bigger or smaller (with no text selected, the next text) |
 | Arrow keys      | Nudge the selected mark, or the region if no mark is selected (`Shift` for a bigger step) |
 | `Delete` / `Backspace` | Delete the selected mark |
 | `Ctrl+Enter` / `Esc` while typing | Finish the text mark |

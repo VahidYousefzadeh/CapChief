@@ -143,6 +143,72 @@ public sealed class DrawingTests : IDisposable
     }
 
     [Fact]
+    public void ResizesTextAsOneStep()
+    {
+        _run.Open(R(0, 0, 800, 600));
+        App.Document.AddMark(new TextMark { A = P(100, 100), B = P(250, 140), Text = "Hello" });
+        Rect before = Marks[0].Bounds;
+        _run.Click(P(175, 120));
+
+        _run.Keystroke(Key.Plus, ctrl: true);
+        _run.Keystroke(Key.Plus, ctrl: true);
+        var text = (TextMark)Marks[0];
+        Eq(text.Size, TextSize.Huge, "Ctrl+Plus twice makes the selected text two sizes bigger");
+        Eq(text.Bounds.TopLeft, before.TopLeft, "growing from its top-left corner");
+        Assert.True(text.Bounds.Width > before.Width && text.Bounds.Height > before.Height, "into a bigger box");
+        Eq(App.Tools.TextSize, TextSize.Huge, "and the next text takes the same size");
+
+        _run.Keystroke(Key.Plus, ctrl: true);
+        Eq(((TextMark)Marks[0]).Size, TextSize.Huge, "Huge is as big as it gets");
+
+        App.Workspace.Undo();
+        Eq(((TextMark)Marks[0]).Size, TextSize.Normal, "a run of size changes undoes in one step");
+        Eq(Marks[0].Bounds, before, "back to the box it had");
+    }
+
+    [Fact]
+    public void SelectingTextTakesItsSizeAsItTakesItsColor()
+    {
+        _run.Open(R(0, 0, 500, 500));
+        App.Document.AddMark(new TextMark { A = P(100, 100), B = P(250, 140), Text = "Big", Size = TextSize.Large });
+        _run.Click(P(175, 120));
+        Eq(App.Tools.TextSize, TextSize.Large, "a click on a large text makes Large the size of the next text");
+
+        App.Commands.TurnWheel(-1, ctrl: true);
+        Eq(((TextMark)Marks[0]).Size, TextSize.Normal, "Ctrl and a wheel notch back make the text a size smaller");
+        App.Commands.TurnWheel(3, ctrl: false);
+        Eq(((TextMark)Marks[0]).Size, TextSize.Normal, "and the wheel without Ctrl leaves it alone");
+    }
+
+    [Fact]
+    public void WithNoTextSelectedTheSizeKeysSetTheNextTextsSize()
+    {
+        _run.Open(R(0, 0, 500, 500));
+        _run.Draw(MarkKind.Rectangle, 100, 100, 200, 200);
+        _run.Click(P(150, 100));
+
+        _run.Keystroke(Key.Minus, ctrl: true);
+        Eq(App.Tools.TextSize, TextSize.Small, "with a shape selected, Ctrl+Minus makes the next text a size smaller");
+        _run.Keystroke(Key.Minus, ctrl: true);
+        Eq(App.Tools.TextSize, TextSize.Small, "Small is as small as it gets");
+        Eq(Marks[0].Bounds, R(100, 100, 200, 200), "and the shape is left as it was");
+    }
+
+    [Fact]
+    public void TextMadeBiggerByTheEdgeOfTheAreaWrapsInsideIt()
+    {
+        _run.Open(R(0, 0, 400, 400));
+        App.Document.AddMark(new TextMark { A = P(200, 100), B = P(390, 140), Text = "Words that wrap" });
+        _run.Click(P(250, 120));
+
+        _run.Keystroke(Key.Plus, ctrl: true);
+        _run.Keystroke(Key.Plus, ctrl: true);
+        Rect grown = Marks[0].Bounds;
+        Eq(grown.Right, 400, "a text made bigger near the edge of the area reaches the edge and no further");
+        Assert.True(grown.Height > 140, "and wraps onto more lines instead");
+    }
+
+    [Fact]
     public void MovingAMarkIsOneStep()
     {
         _run.Open(R(0, 0, 800, 600));

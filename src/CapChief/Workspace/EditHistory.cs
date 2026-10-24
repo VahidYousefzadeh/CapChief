@@ -237,4 +237,5 @@ public enum Merge
     None,
     Recolor,
     Nudge,
+    Resize,
 }

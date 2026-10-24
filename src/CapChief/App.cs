@@ -35,6 +35,7 @@ public sealed class App
         Document.MarkReplaced += Overlay.OnMarkReplaced;
         Document.SelectedMarkChanged += Overlay.OnSelectedMarkChanged;
         Document.SelectedMarkChanged += (_, now) => Tools.MatchColorOf(now);
+        Document.SelectedMarkChanged += (_, now) => Tools.MatchTextSizeOf(now);
         Document.CropMoved += Overlay.OnCropMoved;
         Document.CropMoved += Shell.OnCropMoved;
         Document.CropMoved += (_, now) => Review.CropTo(now);
@@ -70,11 +71,13 @@ public sealed class App
         };
         Overlay.DoubleClick += Workflow.OnDoubleClick;
         Overlay.RightClicked += Commands.RightClick;
+        Overlay.WheelTurned += Commands.TurnWheel;
         Overlay.MouseMove += Workflow.OnMouseMove;
         Overlay.MouseUp += Workflow.OnMouseUp;
         Overlay.CtrlChanged += Workflow.OnCtrlChanged;
         Overlay.AltChanged += Workflow.OnAltChanged;
         Overlay.KeyDown += Shell.OnKeyDown;
+        Overlay.TypingKeyDown += Commands.RunTypingKey;
         Overlay.CursorWanted += Workflow.CursorAt;
         Overlay.Tick += Workflow.OnTick;
         Overlay.TrayMessageReceived += Shell.OnTrayMessage;

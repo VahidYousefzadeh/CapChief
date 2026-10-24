@@ -10,6 +10,8 @@ namespace CapChief.Lab;
 /// </summary>
 public sealed class Driver
 {
+    private const int WheelNotch = 120;
+
     public Driver(App app, Desktop desk)
     {
         App = app;
@@ -93,6 +95,16 @@ public sealed class Driver
     public void RightClick(int x, int y)
     {
         Send(Win32.WM_RBUTTONUP, x, y, 0);
+    }
+
+    public void Wheel(int notches, bool ctrl)
+    {
+        Turn(Overlay, notches, ctrl);
+    }
+
+    public void WheelInTextBox(int notches, bool ctrl)
+    {
+        Turn(Win32.FindWindowExW(Overlay, IntPtr.Zero, "Edit", null), notches, ctrl);
     }
 
     public void DoubleClick(int x, int y)
@@ -217,6 +229,20 @@ public sealed class Driver
     private void Send(uint message, int x, int y, int keys)
     {
         Win32.SendMessageW(Overlay, message, (IntPtr)keys, Win32.LParamOf(x, y));
+    }
+
+    private static void Turn(IntPtr window, int notches, bool ctrl)
+    {
+        int keys;
+        if (ctrl)
+        {
+            keys = Win32.MK_CONTROL;
+        }
+        else
+        {
+            keys = 0;
+        }
+        Win32.SendMessageW(window, Win32.WM_MOUSEWHEEL, (IntPtr)(notches * WheelNotch << 16 | keys), IntPtr.Zero);
     }
 
     public byte[] Screen(Rect area)

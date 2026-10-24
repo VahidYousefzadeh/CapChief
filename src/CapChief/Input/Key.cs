@@ -56,6 +56,8 @@ public enum Key
     D7,
     D8,
     D9,
+    Plus,
+    Minus,
 }
 
 /// <summary>
@@ -79,6 +81,10 @@ public readonly record struct Chord(Key Key, bool Ctrl, bool Shift)
         (Key.Down, Keys.Down),
         (Key.Home, Keys.Home),
         (Key.End, Keys.End),
+        (Key.Plus, Keys.Plus),
+        (Key.Plus, Keys.NumpadPlus),
+        (Key.Minus, Keys.Minus),
+        (Key.Minus, Keys.NumpadMinus),
     ];
 
     public static Chord Of(int virtualKey)

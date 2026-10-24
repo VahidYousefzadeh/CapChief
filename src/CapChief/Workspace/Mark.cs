@@ -614,6 +614,7 @@ public sealed record BlackoutMark : Mark
 public sealed record TextMark : Mark
 {
     public string? Text { get; init; }
+    public TextSize Size { get; init; } = TextSize.Normal;
 
     public override MarkKind Kind
     {
@@ -635,7 +636,7 @@ public sealed record TextMark : Mark
 
     public override void Draw(MarkPainter painter)
     {
-        painter.Text(Text, Bounds, Color);
+        painter.Text(Text, Bounds, Color, Size);
     }
 }
 
@@ -703,6 +704,17 @@ public enum MarkKind
     Blackout,
     Step,
     Highlighter,
+}
+
+/// <summary>
+/// Specifies how big the words of a text mark are drawn.
+/// </summary>
+public enum TextSize
+{
+    Small,
+    Normal,
+    Large,
+    Huge,
 }
 
 /// <summary>

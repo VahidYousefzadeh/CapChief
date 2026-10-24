@@ -263,6 +263,14 @@ public sealed class WindowKind
                 right.OnRightClick();
                 return true;
 
+            case Win32.WM_MOUSEWHEEL:
+                if (e is not IWheelHandler wheel)
+                {
+                    return false;
+                }
+                wheel.OnWheel(Win32.WheelDeltaOf(w), Ctrl(w));
+                return true;
+
             case Win32.WM_MOUSEMOVE:
                 if (_tracksLeaving)
                 {

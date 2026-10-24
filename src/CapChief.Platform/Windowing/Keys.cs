@@ -36,4 +36,12 @@ public static class Keys
     public const int Numpad0 = Win32.VK_NUMPAD0;
 
     public const int Numpad9 = Win32.VK_NUMPAD9;
+
+    public const int Plus = Win32.VK_OEM_PLUS;
+
+    public const int Minus = Win32.VK_OEM_MINUS;
+
+    public const int NumpadPlus = Win32.VK_ADD;
+
+    public const int NumpadMinus = Win32.VK_SUBTRACT;
 }

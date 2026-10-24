@@ -1,8 +1,8 @@
 namespace CapChief.Workspace;
 
 /// <summary>
-/// Tracks the drawing tool and mark color the next press draws with, and which tool of each pair its
-/// toolbar button shows.
+/// Tracks the drawing tool, mark color and text size the next press draws with, and which tool of
+/// each pair its toolbar button shows.
 /// </summary>
 public sealed class Tools
 {
@@ -18,6 +18,7 @@ public sealed class Tools
 
     private MarkKind _tool = MarkKind.Arrow;
     private int _colorIndex;
+    private TextSize _textSize = TextSize.Normal;
 
     public event Action? Changed;
 
@@ -42,6 +43,14 @@ public sealed class Tools
         get
         {
             return Colors[_colorIndex];
+        }
+    }
+
+    public TextSize TextSize
+    {
+        get
+        {
+            return _textSize;
         }
     }
 
@@ -72,6 +81,25 @@ public sealed class Tools
     public bool AdvanceColor(int delta)
     {
         return SetColor(((_colorIndex + delta) % Colors.Length + Colors.Length) % Colors.Length);
+    }
+
+    public bool SetTextSize(TextSize size)
+    {
+        if (size == _textSize)
+        {
+            return false;
+        }
+        _textSize = size;
+        Changed?.Invoke();
+        return true;
+    }
+
+    public void MatchTextSizeOf(Mark? mark)
+    {
+        if (mark is TextMark text)
+        {
+            SetTextSize(text.Size);
+        }
     }
 
     public MarkKind ShownIn(ToolGroup g)

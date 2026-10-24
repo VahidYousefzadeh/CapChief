@@ -33,6 +33,7 @@ public sealed class UiDump
         Toolbar();
         Selecting();
         Marks();
+        TextSizes();
         Endings();
         Pickers();
         History();
@@ -215,6 +216,46 @@ public sealed class UiDump
         App.CaptureService.CopyToClipboard();
         _report.Check(App.Mode == Mode.Idle, "Copy finishes the capture");
         clipboard.CopiedAsDrawn(drawn, copied.Crop);
+    }
+
+    private void TextSizes()
+    {
+        App.CaptureService.StartCapture(CaptureKind.Frozen);
+        _d.Drag(100, 100, 1100, 700, 1);
+        _d.Pick(MarkKind.Text);
+        _d.Wheel(1, ctrl: true);
+        _report.Check(App.Tools.TextSize == TextSize.Large, "Ctrl and the wheel, with no text to change, make the next text Large");
+
+        _d.Click(200, 200);
+        _d.Type("Text sizes");
+        App.Commands.RunTypingKey(new Chord(Key.Plus, Ctrl: true, Shift: false));
+        _report.Check(App.Drawing.IsEditingText, "Ctrl+Plus while typing keeps the box open");
+        Pictures.Screen(_d, new Rect { Left = 150, Top = 150, Right = 750, Bottom = 330 }, At("text-size-typing.png"));
+        _d.KeyInTextBox(Keys.Escape);
+        var typed = (TextMark)App.Capture!.Marks[0];
+        _report.Check(typed is { Size: TextSize.Huge, Text: "Text sizes" }, "and the text typed in it is Huge");
+        SameAsFullRepaint("a huge text");
+
+        Point on = typed.Bounds.Center;
+        _d.Click(on.X, on.Y);
+        _d.Wheel(-3, ctrl: true);
+        var small = (TextMark)App.Capture.Marks[0];
+        _report.Check(small.Size == TextSize.Small && small.Bounds.TopLeft == typed.Bounds.TopLeft && small.Bounds.Height < typed.Bounds.Height, "Ctrl and three notches back make the selected text Small, from its top-left corner");
+        Pictures.Screen(_d, new Rect { Left = 150, Top = 150, Right = 750, Bottom = 330 }, At("text-size-small.png"));
+        SameAsFullRepaint("a text made small");
+        App.Workspace.Undo();
+        _report.Check(App.Capture.Marks[0] == typed, "undo makes it Huge again in one step");
+        SameAsFullRepaint("the size put back");
+
+        _d.DoubleClick(on.X, on.Y);
+        _d.WheelInTextBox(-1, ctrl: true);
+        _d.KeyInTextBox(Keys.Escape);
+        _report.Check(App.Capture.Marks[0] is TextMark { Size: TextSize.Large }, "Ctrl and the wheel over the typing box change its size too");
+
+        _d.Escape();
+        _report.Check(App.Mode == Mode.Idle, "the capture closes as ever");
+        App.Tools.SetTextSize(TextSize.Normal);
+        _d.Pick(MarkKind.Arrow);
     }
 
     private void Endings()

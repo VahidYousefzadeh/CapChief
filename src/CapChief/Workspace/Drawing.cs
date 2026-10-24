@@ -2,7 +2,7 @@ namespace CapChief.Workspace;
 
 /// <summary>
 /// Handles drawing on the captured screenshot: drawing a new mark, moving and resizing a mark or the
-/// selected area, and typing the text of a mark.
+/// selected area, and typing the text of a mark and setting its size.
 /// </summary>
 public sealed class Drawing
 {
@@ -544,7 +544,7 @@ public sealed class Drawing
         }
         if (drawing.Mark is TextMark textMark)
         {
-            BeginTextEdit(WithMinimumSize(textMark), -1);
+            BeginTextEdit(WithMinimumSize(textMark with { Size = _tools.TextSize }), -1);
         }
         else
         {
@@ -556,13 +556,14 @@ public sealed class Drawing
     {
         Rect r = textMark.Bounds;
         float scale = _metrics.Scale;
+        float factor = Metrics.TextFactor(textMark.Size);
         if (r.Width < (int)(MinTextBoxWidthDip * scale))
         {
-            r.Right = r.Left + (int)(TextBoxWidthDip * scale);
+            r.Right = r.Left + (int)(TextBoxWidthDip * scale * factor);
         }
         if (r.Height < (int)(MinTextBoxHeightDip * scale))
         {
-            r.Bottom = r.Top + (int)(TextBoxHeightDip * scale);
+            r.Bottom = r.Top + (int)(TextBoxHeightDip * scale * factor);
         }
         return textMark.WithBounds(r);
     }
@@ -582,6 +583,47 @@ public sealed class Drawing
         _gesture = null;
         BeginTextEdit(textMark, i);
         return true;
+    }
+
+    /// <summary>
+    /// Makes text a size bigger or smaller, counting from the size of the text being typed, else of
+    /// the selected text mark, else of the next text.
+    /// </summary>
+    public void StepTextSize(int step)
+    {
+        TextSize from;
+        if (_box.IsOpen)
+        {
+            from = _textMark.Size;
+        }
+        else if (_document.SelectedMark is TextMark selected)
+        {
+            from = selected.Size;
+        }
+        else
+        {
+            from = _tools.TextSize;
+        }
+        PickTextSize((TextSize)Math.Clamp((int)from + step, (int)TextSize.Small, (int)TextSize.Huge));
+    }
+
+    /// <summary>
+    /// Sets the size the next text is typed in, and gives it to the text being typed or else to the
+    /// selected text mark.
+    /// </summary>
+    private void PickTextSize(TextSize size)
+    {
+        _tools.SetTextSize(size);
+        if (_box.IsOpen)
+        {
+            _textMark = _textMark with { Size = size };
+            _box.Resize(size);
+        }
+        else if (_document.SelectedMark is TextMark selected && selected.Size != size)
+        {
+            Rect bounds = _box.Resized(selected, size, Capture.Crop);
+            _document.ChangeMark(_document.SelectedIndex, (selected with { Size = size }).WithBounds(bounds), Merge.Resize);
+        }
     }
 
     private void OnToolsChanged()
@@ -605,7 +647,7 @@ public sealed class Drawing
             _document.Select(-1);
             _overlay.InvalidateMark(textMark, selected: true, backdrop: true);
         }
-        _box.OpenAt(textMark.Bounds, Capture.Crop, textMark.Text);
+        _box.OpenAt(textMark.Bounds, Capture.Crop, textMark.Text, textMark.Size);
     }
 
     public void EndTextEdit(bool cancel)

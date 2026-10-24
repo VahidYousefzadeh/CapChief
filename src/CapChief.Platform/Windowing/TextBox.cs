@@ -50,11 +50,17 @@ public sealed class TextBox
         _parent = parent;
         _h = Win32.CreateWindowExW(0, "EDIT", text ?? "", Win32.WS_CHILD | Win32.WS_VISIBLE | Win32.ES_MULTILINE | Win32.ES_AUTOVSCROLL, r.Left, r.Top, r.Width, r.Height, parent.Handle, IntPtr.Zero, Win32.GetModuleHandleW(null), IntPtr.Zero);
 
-        Win32.SendMessageW(_h, Win32.WM_SETFONT, font, (IntPtr)1);
-        Win32.SendMessageW(_h, Win32.EM_SETMARGINS, (IntPtr)Win32.EC_MARGINS, IntPtr.Zero);
+        SetFont(font);
         Win32.SetWindowSubclass(_h, _sub, (UIntPtr)1, IntPtr.Zero);
         Win32.SetFocus(_h);
         Win32.SendMessageW(_h, Win32.EM_SETSEL, (IntPtr)(-1), (IntPtr)(-1));
+    }
+
+    public void SetFont(IntPtr font)
+    {
+        Win32.SendMessageW(_h, Win32.WM_SETFONT, font, (IntPtr)1);
+        // A new font brings the edit control's own margins back, so they are taken off again.
+        Win32.SendMessageW(_h, Win32.EM_SETMARGINS, (IntPtr)Win32.EC_MARGINS, IntPtr.Zero);
     }
 
     public void Resize(int w, int h)
@@ -78,6 +84,7 @@ public sealed class TextBox
     public Rect Measure(string text, int width, IntPtr font, uint format)
     {
         var r = new Rect { Right = width };
+        // With the box closed this is the screen's device context, which measures text the same.
         IntPtr dc = Win32.GetDC(_h);
         using (new FontScope(dc, font))
         {
@@ -110,7 +117,14 @@ public sealed class TextBox
         }
         if (m == Win32.WM_KEYDOWN && _events.OnTextKey(w.ToInt32()))
         {
+            // The key did something else, so the character it makes is not typed: Ctrl+Minus makes
+            // an unseen control character.
+            Win32.PeekMessageW(out _, h, Win32.WM_CHAR, Win32.WM_CHAR, Win32.PM_REMOVE);
             return IntPtr.Zero;
+        }
+        if (m == Win32.WM_MOUSEWHEEL && (w.ToInt64() & Win32.MK_CONTROL) != 0)
+        {
+            return Win32.SendMessageW(_parent.Handle, m, w, l);
         }
         if (m == Win32.WM_KILLFOCUS)
         {

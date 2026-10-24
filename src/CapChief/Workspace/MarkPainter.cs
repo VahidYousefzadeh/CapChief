@@ -212,11 +212,11 @@ public sealed class MarkPainter
         _shapes.DrawDisc(_dc, box, color.ColorRef, stepText, color.ContrastingTextColor().ColorRef, _metrics.Step(Math.Min(box.Width, box.Height)));
     }
 
-    public void Text(string? text, Rect r, Color color)
+    public void Text(string? text, Rect r, Color color, TextSize size)
     {
         if (!string.IsNullOrEmpty(text))
         {
-            _dc.DrawText(text, At(r), color.ColorRef, _metrics.Text, TextFormat);
+            _dc.DrawText(text, At(r), color.ColorRef, _metrics.Text(size), TextFormat);
         }
         else if (_drawsEmptyText)
         {

@@ -230,6 +230,28 @@ public sealed class CommandsTests : IDisposable
     }
 
     [Fact]
+    public void TheTextSizeKeysStepTheSize()
+    {
+        Eq(In(Mode.Annotating, Key.Plus, ctrl: true), "text-bigger", "Ctrl+Plus makes text bigger");
+        Eq(In(Mode.Annotating, Key.Minus, ctrl: true), "text-smaller", "Ctrl+Minus makes it smaller");
+        Eq(In(Mode.Annotating, Key.Plus, ctrl: true, shift: true), "text-bigger", "Shift may be down, as some keyboards need it for Plus");
+        Eq(In(Mode.Annotating, Key.Plus), "", "Plus on its own asks for nothing");
+        Eq(Chord.KeyOf(Keys.NumpadPlus), Key.Plus, "the number pad's plus is Plus");
+        Eq(Chord.KeyOf(Keys.NumpadMinus), Key.Minus, "and its minus is Minus");
+        Eq(Chord.VirtualKeyOf(Key.Plus), Keys.Plus, "while Plus stands for the main keyboard's plus key");
+    }
+
+    [Fact]
+    public void OnlyTheTextSizeKeysAnswerWhileTyping()
+    {
+        _run.Open(R(100, 100, 400, 300));
+        Assert.True(Commands.RunTypingKey(new Chord(Key.Plus, Ctrl: true, Shift: false)), "Ctrl+Plus answers while typing");
+        Eq(App.Tools.TextSize, TextSize.Large, "and makes the text a size bigger");
+        Assert.False(Commands.RunTypingKey(new Chord(Key.A, Ctrl: false, Shift: false)), "a letter is left to be typed");
+        Assert.False(Commands.RunTypingKey(new Chord(Key.Z, Ctrl: true, Shift: false)), "and so is Ctrl+Z, which the box undoes itself");
+    }
+
+    [Fact]
     public void TheScreenshotCommandsWantAnAreaToActOn()
     {
         Command[] acting = [Commands.Copy, Commands.Save, Commands.SaveToHistory, Commands.Delete];

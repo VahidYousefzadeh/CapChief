@@ -44,6 +44,14 @@ public interface IRightClickHandler : IWindowHandler
 }
 
 /// <summary>
+/// Defines how a window handles a turn of the mouse wheel.
+/// </summary>
+public interface IWheelHandler : IWindowHandler
+{
+    void OnWheel(int delta, bool ctrl);
+}
+
+/// <summary>
 /// Defines how a window handles the monitors being added, removed or resized.
 /// </summary>
 public interface IDisplayChangeHandler : IWindowHandler

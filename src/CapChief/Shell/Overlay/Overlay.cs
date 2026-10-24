@@ -4,7 +4,7 @@ namespace CapChief.Shell;
 /// Represents the full-screen window a capture happens in, which shows the frozen screen, passes
 /// the mouse and the keyboard to the app, and repaints what changed.
 /// </summary>
-public sealed class Overlay : IPaintHandler, IMouseHandler, IDoubleClickHandler, IRightClickHandler, IKeyDownHandler, IKeyUpHandler,
+public sealed class Overlay : IPaintHandler, IMouseHandler, IDoubleClickHandler, IRightClickHandler, IWheelHandler, IKeyDownHandler, IKeyUpHandler,
                               ITimerHandler, IHotkeyHandler, IActivateHandler, IDeactivateHandler, IEditBackdropHandler,
                               IAppMessageHandler, IDisplayChangeHandler, ICloseHandler
 {
@@ -12,14 +12,18 @@ public sealed class Overlay : IPaintHandler, IMouseHandler, IDoubleClickHandler,
 
     private const int InitialWidthPx = 200, InitialHeightPx = 80;
 
+    private const int WheelNotch = 120;
+
     public event Action<Point, bool>? MouseDown;
     public event Action<Point, bool>? DoubleClick;
     public event Action? RightClicked;
+    public event Action<int, bool>? WheelTurned;
     public event Action<Point, bool, bool>? MouseMove;
     public event Action? MouseUp;
     public event Action<bool>? CtrlChanged;
     public event Action<bool>? AltChanged;
     public event Func<Chord, bool>? KeyDown;
+    public event Func<Chord, bool>? TypingKeyDown;
     public event Func<Point, Cursor>? CursorWanted;
     public event Action? Tick;
     public event Action<AppSignal>? TrayMessageReceived;
@@ -53,6 +57,7 @@ public sealed class Overlay : IPaintHandler, IMouseHandler, IDoubleClickHandler,
     private Command? _cancelCountdown;
     private Command? _stopRecording;
     private uint _tickMs;
+    private int _wheelTurned;
     private bool _mouseCaptured;
     private TypedSize? _caretFor;
     private bool _layered;
@@ -73,6 +78,7 @@ public sealed class Overlay : IPaintHandler, IMouseHandler, IDoubleClickHandler,
         _live = new LivePainter(_labelPainter, metrics);
         Drawing = new Drawing(document, tools, this, metrics, _textBox, _dragImage);
         _textBox.EndRequested += () => Drawing.EndTextEdit(cancel: false);
+        _textBox.KeyDown += chord => TypingKeyDown?.Invoke(chord) ?? false;
         _painter = new OverlayPainter(desk, metrics, _labelPainter, selecting, Drawing, document, review, markPainter);
         _windowKind = new WindowKind(ClassName, icon, doubleClicks: true, redrawOnResize: true, ownsBackground: true, tracksLeaving: false);
         _animation = new AreaAnimation(desk, markPainter, _labelPainter);
@@ -566,6 +572,26 @@ public sealed class Overlay : IPaintHandler, IMouseHandler, IDoubleClickHandler,
     public void OnRightClick()
     {
         RightClicked?.Invoke();
+    }
+
+    /// <summary>
+    /// Adds up the wheel's turns, which a fine wheel or a touchpad sends in small parts, and passes
+    /// them on a whole notch at a time.
+    /// </summary>
+    public void OnWheel(int delta, bool ctrl)
+    {
+        if ((delta > 0) != (_wheelTurned > 0))
+        {
+            _wheelTurned = 0;
+        }
+        _wheelTurned += delta;
+        int notches = _wheelTurned / WheelNotch;
+        if (notches == 0)
+        {
+            return;
+        }
+        _wheelTurned -= notches * WheelNotch;
+        WheelTurned?.Invoke(notches, ctrl);
     }
 
     public void OnMouseMove(Point at, bool shift, bool ctrl)

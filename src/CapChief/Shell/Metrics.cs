@@ -10,9 +10,12 @@ public sealed class Metrics
 
     private const int StepFloorPx = 7;
 
-    private const int LabelDip = 15, TextDip = 24, DigitDip = 19;
+    private const int LabelDip = 15, DigitDip = 19;
+
+    private static readonly TextSize[] TextSizes = Enum.GetValues<TextSize>();
 
     private readonly Desktop _desk;
+    private readonly TextFont[] _texts = new TextFont[TextSizes.Length];
     private int _stepPx;
     private TextFont _step;
 
@@ -36,9 +39,20 @@ public sealed class Metrics
 
     public TextFont Label { get; private set; }
 
-    public TextFont Text { get; private set; }
-
     public TextFont Digit { get; private set; }
+
+    /// <summary>
+    /// Gives how many times bigger than Normal text of a size is drawn.
+    /// </summary>
+    public static float TextFactor(TextSize size)
+    {
+        return DipOf(size) / (float)DipOf(TextSize.Normal);
+    }
+
+    public TextFont Text(TextSize size)
+    {
+        return _texts[(int)size];
+    }
 
     public void ScaleToMonitorAt(Point overlay)
     {
@@ -61,10 +75,14 @@ public sealed class Metrics
     public void Free()
     {
         Label.Free();
-        Text.Free();
+        foreach (TextFont text in _texts)
+        {
+            text.Free();
+        }
         Digit.Free();
         _step.Free();
-        Label = Text = Digit = _step = default;
+        Label = Digit = _step = default;
+        Array.Clear(_texts);
         _stepPx = 0;
     }
 
@@ -77,7 +95,10 @@ public sealed class Metrics
         Free();
         Scale = scale;
         Label = Font(LabelDip);
-        Text = Font(TextDip);
+        foreach (TextSize size in TextSizes)
+        {
+            _texts[(int)size] = Font(DipOf(size));
+        }
         Digit = Font(DigitDip);
 
         float strokeWidth = Math.Max(4f, 4f * scale);
@@ -109,6 +130,23 @@ public sealed class Metrics
     private TextFont Font(int dip)
     {
         return TextFont.Sharp((int)Math.Round(dip * Scale), FontWeights.Semibold);
+    }
+
+    private static int DipOf(TextSize size)
+    {
+        switch (size)
+        {
+            case TextSize.Small:
+                return 16;
+            case TextSize.Normal:
+                return 24;
+            case TextSize.Large:
+                return 36;
+            case TextSize.Huge:
+                return 54;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(size), size, null);
+        }
     }
 }
 

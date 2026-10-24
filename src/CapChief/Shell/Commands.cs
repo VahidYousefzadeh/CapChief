@@ -84,7 +84,7 @@ public sealed class Command
 
 /// <summary>
 /// Provides every command the user can give: the capture commands that answer anywhere, the app's
-/// own, and one table of keys for each mode.
+/// own, one table of keys for each mode, and one for the keys that work while typing a text.
 /// </summary>
 public sealed class Commands
 {
@@ -97,10 +97,13 @@ public sealed class Commands
     private readonly Drawing _drawing;
     private readonly Command _cancelSelecting;
     private readonly Command _deleteMark;
+    private readonly Command _textBigger;
+    private readonly Command _textSmaller;
     private readonly Command _undo;
     private readonly Command _redo;
     private readonly Command[] _selectingRows;
     private readonly Command[] _annotatingRows;
+    private readonly Command[] _typingRows;
     private readonly Command[] _liveRows;
     private readonly Command[] _reviewingRows;
 
@@ -192,6 +195,18 @@ public sealed class Commands
             Keys = [new(Key.Delete), new(Key.Backspace)],
             Enabled = () => workspace.HasSelectedMark,
         };
+        _textBigger = new Command("text-bigger", () => drawing.StepTextSize(1))
+        {
+            Keys = [new(Key.Plus, Ctrl: true)],
+            Enabled = () => workspace.IsAnnotating,
+            LeavesTextOpen = true,
+        };
+        _textSmaller = new Command("text-smaller", () => drawing.StepTextSize(-1))
+        {
+            Keys = [new(Key.Minus, Ctrl: true)],
+            Enabled = () => workspace.IsAnnotating,
+            LeavesTextOpen = true,
+        };
         Copy = new Command("copy", captureService.CopyToClipboard)
         {
             Keys = [new(Key.C, Ctrl: true), new(Key.Enter)],
@@ -249,6 +264,7 @@ public sealed class Commands
         });
         _selectingRows = SelectingTable();
         _annotatingRows = AnnotatingTable();
+        _typingRows = [_textBigger, _textSmaller];
         _liveRows = [Escape(workflow.CancelLive)];
         _reviewingRows = ReviewingTable(review, hasClip);
     }
@@ -298,6 +314,32 @@ public sealed class Commands
     public bool RunKey(Chord chord)
     {
         return Command.Find(For(_workflow.CurrentMode), chord) is { } command && Run(command);
+    }
+
+    public bool RunTypingKey(Chord chord)
+    {
+        return Command.Find(_typingRows, chord) is { } command && Run(command);
+    }
+
+    public void TurnWheel(int notches, bool ctrl)
+    {
+        if (!ctrl)
+        {
+            return;
+        }
+        Command command;
+        if (notches > 0)
+        {
+            command = _textBigger;
+        }
+        else
+        {
+            command = _textSmaller;
+        }
+        for (int i = 0; i < Math.Abs(notches); i++)
+        {
+            Run(command);
+        }
     }
 
     public void RightClick()
@@ -456,6 +498,8 @@ public sealed class Commands
                 Keys = [new(Key.Left, Ctrl: true)],
                 LeavesTextOpen = true,
             },
+            _textBigger,
+            _textSmaller,
             SaveToHistory,
             _deleteMark,
             Copy,

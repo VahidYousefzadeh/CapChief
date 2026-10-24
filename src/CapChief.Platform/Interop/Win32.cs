@@ -52,6 +52,11 @@ public static class Win32
         return (int)(v.ToInt64() & 0xFFFF);
     }
 
+    public static int WheelDeltaOf(IntPtr wParam)
+    {
+        return (short)((wParam.ToInt64() >> 16) & 0xFFFF);
+    }
+
     public static float ScaleFromDpi(uint dpi)
     {
         return dpi / (float)USER_DEFAULT_SCREEN_DPI;
@@ -79,6 +84,7 @@ public static class Win32
     public const uint WM_LBUTTONUP = 0x0202;
     public const uint WM_LBUTTONDBLCLK = 0x0203;
     public const uint WM_RBUTTONUP = 0x0205;
+    public const uint WM_MOUSEWHEEL = 0x020A;
     public const uint WM_DISPLAYCHANGE = 0x007E;
     public const uint EM_SETSEL = 0x00B1;
     public const uint EM_SETMARGINS = 0x00D3;
@@ -135,6 +141,10 @@ public static class Win32
     public const int VK_CONTROL = 0x11;
     public const int VK_SHIFT = 0x10;
     public const int VK_MENU = 0x12;
+    public const int VK_OEM_PLUS = 0xBB;
+    public const int VK_OEM_MINUS = 0xBD;
+    public const int VK_ADD = 0x6B;
+    public const int VK_SUBTRACT = 0x6D;
 
     public const int MK_SHIFT = 0x0004;
     public const int MK_CONTROL = 0x0008;
@@ -210,6 +220,7 @@ public static class Win32
     public const uint WM_APP = 0x8000;
     public const uint WM_NULL = 0x0000;
     public const uint WM_CONTEXTMENU = 0x007B;
+    public const uint PM_REMOVE = 0x0001;
 
     public const uint NIM_ADD = 0;
     public const uint NIM_MODIFY = 1;
@@ -464,6 +475,7 @@ public static class Win32
 
     [DllImport("user32.dll")] public static extern int GetMessageW(out MSG msg, IntPtr hWnd, uint min, uint max);
 
+    [DllImport("user32.dll")] public static extern bool PeekMessageW(out MSG msg, IntPtr hWnd, uint min, uint max, uint remove);
     [DllImport("user32.dll")] public static extern bool TranslateMessage(ref MSG msg);
     [DllImport("user32.dll")] public static extern IntPtr DispatchMessageW(ref MSG msg);
     [DllImport("user32.dll")] public static extern void PostQuitMessage(int code);
